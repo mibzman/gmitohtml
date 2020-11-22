@@ -12,12 +12,15 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"sync"
 )
 
 // ErrInvalidURL is the error returned when the URL is invalid.
 var ErrInvalidURL = errors.New("invalid URL")
 
 var daemonAddress string
+
+var assetLock sync.Mutex
 
 func rewriteURL(u string, loc *url.URL) string {
 	if daemonAddress != "" {
@@ -41,7 +44,6 @@ func rewriteURL(u string, loc *url.URL) string {
 func Convert(page []byte, u string) []byte {
 	var result []byte
 
-	var lastPreformatted bool
 	var preformatted bool
 
 	parsedURL, err := url.Parse(u)
@@ -56,16 +58,12 @@ func Convert(page []byte, u string) []byte {
 		l := len(line)
 		if l >= 3 && string(line[0:3]) == "```" {
 			preformatted = !preformatted
-			continue
-		}
-
-		if preformatted != lastPreformatted {
 			if preformatted {
 				result = append(result, []byte("<pre>\n")...)
 			} else {
 				result = append(result, []byte("</pre>\n")...)
 			}
-			lastPreformatted = preformatted
+			continue
 		}
 
 		if preformatted {
@@ -96,7 +94,7 @@ func Convert(page []byte, u string) []byte {
 			}
 		}
 		if heading > 0 {
-			result = append(result, []byte(fmt.Sprintf("<h%d>%s</h%d>", heading, line, heading))...)
+			result = append(result, []byte(fmt.Sprintf("<h%d>%s</h%d>", heading, line[heading:], heading))...)
 			continue
 		}
 
@@ -104,11 +102,17 @@ func Convert(page []byte, u string) []byte {
 		result = append(result, []byte("<br>")...)
 	}
 
+	if preformatted {
+		result = append(result, []byte("</pre>\n")...)
+	}
+
+	result = append([]byte("<!DOCTYPE html>\n<html>\n<head>\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<link rel=\"stylesheet\" href=\"/assets/style.css\"></link>\n</head>\n<body>\n"), result...)
+	result = append(result, []byte("\n</body>\n</html>")...)
 	return result
 }
 
 // Fetch downloads and converts a Gemini page.
-func Fetch(u string, clientCertFile string, clientCertKey string) ([]byte, []byte, error) {
+func fetch(u string, clientCertFile string, clientCertKey string) ([]byte, []byte, error) {
 	if u == "" {
 		return nil, nil, ErrInvalidURL
 	}
@@ -179,7 +183,7 @@ func handleRequest(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	header, data, err := Fetch(u.String(), "", "")
+	header, data, err := fetch(u.String(), "", "")
 	if err != nil {
 		fmt.Fprintf(writer, "Error: failed to fetch %s: %s", u, err)
 		return
@@ -194,24 +198,35 @@ func handleRequest(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if len(header) > 3 && !bytes.HasPrefix(header[3:], []byte("text/gemini")) {
-		writer.Header().Set("Content-type", string(header[3:]))
+		writer.Header().Set("Content-Type", string(header[3:]))
 	} else {
-		writer.Header().Set("Content-type", "text/html; charset=utf-8")
+		writer.Header().Set("Content-Type", "text/html; charset=utf-8")
 	}
 
-	writer.Write([]byte("<!DOCTYPE html>\n<html>\n<body>\n"))
 	writer.Write(data)
-	writer.Write([]byte("\n</body>\n</html>"))
+}
+
+func handleAssets(writer http.ResponseWriter, request *http.Request) {
+	assetLock.Lock()
+	defer assetLock.Unlock()
+
+	writer.Header().Set("Cache-Control", "max-age=86400")
+
+	http.FileServer(fs).ServeHTTP(writer, request)
 }
 
 // StartDaemon starts the page conversion daemon.
 func StartDaemon(address string) error {
+	loadAssets()
+
 	daemonAddress = address
 
-	http.HandleFunc("/", handleRequest)
-
+	handler := http.NewServeMux()
+	handler.HandleFunc("/assets/style.css", handleAssets)
+	handler.HandleFunc("/", handleRequest)
 	go func() {
-		log.Fatal(http.ListenAndServe(address, nil))
+		log.Fatal(http.ListenAndServe(address, handler))
 	}()
+
 	return nil
 }

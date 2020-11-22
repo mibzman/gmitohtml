@@ -58,9 +58,6 @@ func main() {
 
 	data = gmitohtml.Convert(data, "")
 
-	data = append([]byte("<!DOCTYPE html>\n<html>\n<body>\n"), data...)
-	data = append(data, []byte("\n</body>\n</html>")...)
-
 	if view {
 		openBrowser(string(append([]byte("data:text/html,"), []byte(url.PathEscape(string(data)))...)))
 		return
