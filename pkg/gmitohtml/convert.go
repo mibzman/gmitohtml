@@ -124,13 +124,15 @@ func fetch(u string, clientCertFile string, clientCertKey string) ([]byte, []byt
 	if requestURL.Scheme == "" {
 		requestURL.Scheme = "gemini"
 	}
-	if strings.IndexRune(requestURL.Host, ':') == -1 {
-		requestURL.Host += ":1965"
+
+	host := requestURL.Host
+	if strings.IndexRune(host, ':') == -1 {
+		host += ":1965"
 	}
 
 	tlsConfig := &tls.Config{}
 
-	conn, err := tls.Dial("tcp", requestURL.Host, tlsConfig)
+	conn, err := tls.Dial("tcp", host, tlsConfig)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -192,7 +194,7 @@ func handleRequest(writer http.ResponseWriter, request *http.Request) {
 	if len(header) > 0 && header[0] == '3' {
 		split := bytes.SplitN(header, []byte(" "), 2)
 		if len(split) == 2 {
-			writer.Header().Set("Location", rewriteURL(string(split[1]), request.URL))
+			http.Redirect(writer, request, rewriteURL(string(split[1]), request.URL), http.StatusTemporaryRedirect)
 			return
 		}
 	}
