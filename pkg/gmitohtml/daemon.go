@@ -65,7 +65,40 @@ func fetch(u string, clientCertFile string, clientCertKey string) ([]byte, []byt
 		data = data[firstNewLine+1:]
 	}
 
-	if bytes.HasPrefix(header, []byte("text/html")) {
+	requestInput := bytes.HasPrefix(header, []byte("1"))
+	if requestInput {
+		requestSensitiveInput := bytes.HasPrefix(header, []byte("11"))
+
+		data = []byte(inputPage)
+
+		data = bytes.Replace(data, []byte("GEMINICURRENTURL"), []byte(rewriteURL(u, requestURL)), 1)
+
+		currentURL := u
+		if strings.HasPrefix(currentURL, "gemini://") {
+			currentURL = currentURL[9:]
+		}
+		data = bytes.Replace(data, []byte("GEMINICURRENTURL"), []byte(currentURL), 1)
+
+		prompt := "(No input prompt)"
+		if len(header) > 3 {
+			prompt = string(header[3:])
+		}
+		data = bytes.Replace(data, []byte("GEMINIINPUTPROMPT"), []byte(prompt), 1)
+
+		inputType := "text"
+		if requestSensitiveInput {
+			inputType = "password"
+		}
+		data = bytes.Replace(data, []byte("GEMINIINPUTTYPE"), []byte(inputType), 1)
+
+		return header, data, nil
+	}
+
+	if !bytes.HasPrefix(header, []byte("2")) {
+		return header, []byte(fmt.Sprintf("Unexpected header: %s", header)), nil
+	}
+
+	if bytes.HasPrefix(header, []byte("20 text/html")) {
 		return header, data, nil
 	}
 	return header, Convert(data, requestURL.String()), nil
@@ -74,7 +107,7 @@ func fetch(u string, clientCertFile string, clientCertKey string) ([]byte, []byt
 func handleIndex(writer http.ResponseWriter, request *http.Request) {
 	address := request.FormValue("address")
 	if address != "" {
-		http.Redirect(writer, request, rewriteURL(address, request.URL), http.StatusTemporaryRedirect)
+		http.Redirect(writer, request, rewriteURL(address, request.URL), http.StatusSeeOther)
 		return
 	}
 
@@ -92,6 +125,13 @@ func handleRequest(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	inputText := request.PostFormValue("input")
+	if inputText != "" {
+		request.URL.RawQuery = inputText
+		http.Redirect(writer, request, request.URL.String(), http.StatusSeeOther)
+		return
+	}
+
 	pathSplit := strings.Split(request.URL.Path, "/")
 	if len(pathSplit) < 2 || pathSplit[1] != "gemini" {
 		writer.Write([]byte("Error: invalid protocol, only Gemini is supported"))
@@ -103,6 +143,9 @@ func handleRequest(writer http.ResponseWriter, request *http.Request) {
 		writer.Write([]byte("Error: invalid URL"))
 		return
 	}
+	if request.URL.RawQuery != "" {
+		u.RawQuery = request.URL.RawQuery
+	}
 
 	header, data, err := fetch(u.String(), "", "")
 	if err != nil {
@@ -113,7 +156,7 @@ func handleRequest(writer http.ResponseWriter, request *http.Request) {
 	if len(header) > 0 && header[0] == '3' {
 		split := bytes.SplitN(header, []byte(" "), 2)
 		if len(split) == 2 {
-			http.Redirect(writer, request, rewriteURL(string(split[1]), request.URL), http.StatusTemporaryRedirect)
+			http.Redirect(writer, request, rewriteURL(string(split[1]), request.URL), http.StatusSeeOther)
 			return
 		}
 	}

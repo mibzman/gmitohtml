@@ -105,7 +105,7 @@ func Convert(page []byte, u string) []byte {
 		result = append(result, []byte("</pre>\n")...)
 	}
 
-	result = append([]byte("<!DOCTYPE html>\n<html>\n<head>\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n<link rel=\"stylesheet\" href=\"/assets/style.css\"></link>\n</head>\n<body>\n"), result...)
-	result = append(result, []byte("\n</body>\n</html>")...)
+	result = append([]byte(pageHeader), result...)
+	result = append(result, []byte(pageFooter)...)
 	return result
 }

@@ -2,27 +2,38 @@ package gmitohtml
 
 var fs = make(inMemoryFS)
 
-const indexPage = `
+const pageHeader = `
 <!DOCTYPE html>
 <html>
 <head>
-<title>Xenia</title>
-<link rel="stylesheet" href="/assets/style.css"></link>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="/assets/style.css">
 </head>
-<body>
-<h1>Welcome to Xenia</h1><br>
-<form method="post" action="/">
-<input type="text" name="address" placeholder="Address" size="50" autofocus> <input type="submit" value="Go">
+<body>`
+
+const pageFooter = `
+</body>
+</html>
+`
+
+const indexPage = pageHeader + `
+<form method="post" action="/" novalidate>
+<input type="url" name="address" placeholder="Address" size="50" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus> <input type="submit" value="Go">
 </form>
 <br>
 <ul>
 <li><a href="/gemini/gus.guru/">GUS - Gemini Universal Search</a></li>
 <li><a href="/gemini/gemini.circumlunar.space/">Gemini protocol</a></li>
-<li><a href="https://gitlab.com/tslocum/xenia">Xenia</a></li>
 </ul>
-</body>
-</html>
-`
+` + pageFooter
+
+const inputPage = pageHeader + `
+<form method="post" action="GEMINICURRENTURL">
+<b>GEMINICURRENTURL</b> requests input.<br><br><br>
+<b>GEMINIINPUTPROMPT</b><br><br>
+<input type="GEMINIINPUTTYPE" name="input" placeholder="Input" size="50" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus> <input type="submit" value="Go">
+</form>
+` + pageFooter
 
 func loadAssets() {
 	fs["/assets/style.css"] = loadFile("style.css", `

@@ -19,19 +19,16 @@ The resulting binary is available as `~/go/bin/gmitohtml`.
 
 ## Usage
 
+Run daemon at [http://localhost:1967](http://localhost:1967):
+
+```bash
+gmitohtml --daemon=localhost:1967
+```
+
 Convert a single document:
 
 ```bash
 gmitohtml < document.gmi
-```
-
-Run as daemon at `http://localhost:8080`:
-
-```bash
-# Start the daemon:
-gmitohtml --daemon=localhost:8080
-# Access via browser:
-xdg-open http://localhost:8080/gemini/twins.rocketnine.space/
 ```
 
 ## Support
