@@ -2,6 +2,28 @@ package gmitohtml
 
 var fs = make(inMemoryFS)
 
+const indexPage = `
+<!DOCTYPE html>
+<html>
+<head>
+<title>Xenia</title>
+<link rel="stylesheet" href="/assets/style.css"></link>
+</head>
+<body>
+<h1>Welcome to Xenia</h1><br>
+<form method="post" action="/">
+<input type="text" name="address" placeholder="Address" size="50" autofocus> <input type="submit" value="Go">
+</form>
+<br>
+<ul>
+<li><a href="/gemini/gus.guru/">GUS - Gemini Universal Search</a></li>
+<li><a href="/gemini/gemini.circumlunar.space/">Gemini protocol</a></li>
+<li><a href="https://gitlab.com/tslocum/xenia">Xenia</a></li>
+</ul>
+</body>
+</html>
+`
+
 func loadAssets() {
 	fs["/assets/style.css"] = loadFile("style.css", `
 /*! normalize.css v8.0.1 | MIT License | github.com/necolas/normalize.css */
