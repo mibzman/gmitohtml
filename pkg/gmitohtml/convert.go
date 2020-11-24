@@ -116,5 +116,5 @@ func Convert(page []byte, u string) []byte {
 
 	result = append([]byte(pageHeader), result...)
 	result = append(result, []byte(pageFooter)...)
-	return result
+	return fillTemplateVariables(result, u, false)
 }

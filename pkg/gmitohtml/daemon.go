@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
+	"html"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -91,31 +92,28 @@ func fetch(u string) ([]byte, []byte, error) {
 
 		data = []byte(inputPage)
 
-		data = bytes.Replace(data, []byte("GEMINICURRENTURL"), []byte(rewriteURL(u, requestURL)), 1)
-
-		currentURL := u
-		if strings.HasPrefix(currentURL, "gemini://") {
-			currentURL = currentURL[9:]
-		}
-		data = bytes.Replace(data, []byte("GEMINICURRENTURL"), []byte(currentURL), 1)
+		data = bytes.Replace(data, []byte("~GEMINIINPUTFORM~"), []byte(html.EscapeString(rewriteURL(u, requestURL))), 1)
 
 		prompt := "(No input prompt)"
 		if len(header) > 3 {
 			prompt = string(header[3:])
 		}
-		data = bytes.Replace(data, []byte("GEMINIINPUTPROMPT"), []byte(prompt), 1)
+		data = bytes.Replace(data, []byte("~GEMINIINPUTPROMPT~"), []byte(prompt), 1)
 
 		inputType := "text"
 		if requestSensitiveInput {
 			inputType = "password"
 		}
-		data = bytes.Replace(data, []byte("GEMINIINPUTTYPE"), []byte(inputType), 1)
+		data = bytes.Replace(data, []byte("~GEMINIINPUTTYPE~"), []byte(inputType), 1)
 
-		return header, data, nil
+		return header, fillTemplateVariables(data, u, false), nil
 	}
 
 	if !bytes.HasPrefix(header, []byte("2")) {
-		return header, []byte(fmt.Sprintf(pageHeader+"Server sent unexpected header:<br><br><b>%s</b>", header) + pageFooter), nil
+		errorPage := []byte(pageHeader)
+		errorPage = append(errorPage, []byte(fmt.Sprintf("Server sent unexpected header:<br><br><b>%s</b>", header))...)
+		errorPage = append(errorPage, []byte(pageFooter)...)
+		return header, errorPage, nil
 	}
 
 	if bytes.HasPrefix(header, []byte("20 text/html")) {
@@ -131,7 +129,25 @@ func handleIndex(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	writer.Write([]byte(indexPage))
+	writer.Write(fillTemplateVariables([]byte(indexPage), request.URL.String(), true))
+}
+
+func fillTemplateVariables(data []byte, currentURL string, autofocus bool) []byte {
+	if strings.HasPrefix(currentURL, "gemini://") {
+		currentURL = currentURL[9:]
+	}
+	if currentURL == "/" {
+		currentURL = ""
+	}
+	data = bytes.ReplaceAll(data, []byte("~GEMINICURRENTURL~"), []byte(currentURL))
+
+	autofocusValue := ""
+	if autofocus {
+		autofocusValue = "autofocus"
+	}
+	data = bytes.ReplaceAll(data, []byte("~GEMINIAUTOFOCUS~"), []byte(autofocusValue))
+
+	return data
 }
 
 func handleRequest(writer http.ResponseWriter, request *http.Request) {

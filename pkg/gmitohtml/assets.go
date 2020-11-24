@@ -9,7 +9,11 @@ const pageHeader = `
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="stylesheet" href="/assets/style.css">
 </head>
-<body>`
+<body>
+<form method="post" action="/" novalidate>
+<input type="url" name="address" placeholder="Address" size="40" value="~GEMINICURRENTURL~" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" css="width: 100%;" ~GEMINIAUTOFOCUS~>
+</form>
+<br>`
 
 const pageFooter = `
 </body>
@@ -17,10 +21,6 @@ const pageFooter = `
 `
 
 const indexPage = pageHeader + `
-<form method="post" action="/" novalidate>
-<input type="url" name="address" placeholder="Address" size="50" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus> <input type="submit" value="Go">
-</form>
-<br>
 <ul>
 <li><a href="/gemini/gus.guru/">GUS - Gemini Universal Search</a></li>
 <li><a href="/gemini/gemini.circumlunar.space/">Gemini protocol</a></li>
@@ -28,10 +28,13 @@ const indexPage = pageHeader + `
 ` + pageFooter
 
 const inputPage = pageHeader + `
-<form method="post" action="GEMINICURRENTURL">
-<b>GEMINICURRENTURL</b> requests input.<br><br><br>
-<b>GEMINIINPUTPROMPT</b><br><br>
-<input type="GEMINIINPUTTYPE" name="input" placeholder="Input" size="50" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus> <input type="submit" value="Go">
+<form method="post" action="~GEMINIINPUTFORM~">
+<div style="padding-top: 25px;">
+<span style="font-size: 1.5em;">~GEMINIINPUTPROMPT~</span><br><br>
+<div>
+<input type="~GEMINIINPUTTYPE~" name="input" placeholder="Input" size="40" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus>
+</div>
+</div>
 </form>
 ` + pageFooter
 
