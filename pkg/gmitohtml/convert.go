@@ -70,7 +70,7 @@ func Convert(page []byte, u string) []byte {
 
 		if l >= 6 && bytes.HasPrefix(line, []byte("=>")) {
 			splitStart := 2
-			if line[splitStart+1] == ' ' || line[splitStart+1] == '\t' {
+			if line[splitStart] == ' ' || line[splitStart] == '\t' {
 				splitStart++
 			}
 			split := bytes.SplitN(line[splitStart:], []byte(" "), 2)
