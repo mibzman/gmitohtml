@@ -1,0 +1,27 @@
+project_name: gmitohtml
+
+builds:
+  -
+    id: gmitohtml
+    ldflags:
+      - -s -w
+    goos:
+      - linux
+      - windows
+    goarch:
+      - 386
+      - amd64
+archives:
+  -
+    id: gmitohtml
+    builds:
+      - gmitohtml
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - ./*.md
+      - CHANGELOG
+      - LICENSE
+checksum:
+  name_template: 'checksums.txt'

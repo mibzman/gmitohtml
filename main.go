@@ -1,10 +1,6 @@
 package main
 
 import (
-	"path"
-
-	"gitlab.com/tslocum/gmitohtml/pkg/gmitohtml"
-
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -12,7 +8,10 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path"
 	"runtime"
+
+	"gitlab.com/tslocum/gmitohtml/pkg/gmitohtml"
 )
 
 func openBrowser(url string) {

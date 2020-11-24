@@ -8,6 +8,10 @@ conversion tool and daemon
 
 ## Download
 
+[**Download gmitohtml**](https://gmitohtml.rocketnine.space/download/?sort=name&order=desc)
+
+## Compile
+
 gmitohtml is written in [Go](https://golang.org). Run the following command to
 download and build gmitohtml from source.
 
