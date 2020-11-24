@@ -68,20 +68,29 @@ func Convert(page []byte, u string) []byte {
 			continue
 		}
 
-		if l >= 7 && bytes.HasPrefix(line, []byte("=> ")) {
-			split := bytes.SplitN(line[3:], []byte(" "), 2)
+		if l >= 6 && bytes.HasPrefix(line, []byte("=>")) {
+			splitStart := 2
+			if line[splitStart+1] == ' ' || line[splitStart+1] == '\t' {
+				splitStart++
+			}
+			split := bytes.SplitN(line[splitStart:], []byte(" "), 2)
 			if len(split) != 2 {
-				split = bytes.SplitN(line[3:], []byte("\t"), 2)
+				split = bytes.SplitN(line[splitStart:], []byte("\t"), 2)
 			}
+
+			linkURL := line[splitStart:]
+			linkLabel := line[splitStart:]
 			if len(split) == 2 {
-				link := append([]byte(`<a href="`), rewriteURL(string(split[0]), parsedURL)...)
-				link = append(link, []byte(`">`)...)
-				link = append(link, split[1]...)
-				link = append(link, []byte(`</a>`)...)
-				result = append(result, link...)
-				result = append(result, []byte("<br>")...)
-				continue
+				linkURL = split[0]
+				linkLabel = split[1]
 			}
+			link := append([]byte(`<a href="`), rewriteURL(string(linkURL), parsedURL)...)
+			link = append(link, []byte(`">`)...)
+			link = append(link, linkLabel...)
+			link = append(link, []byte(`</a>`)...)
+			result = append(result, link...)
+			result = append(result, []byte("<br>")...)
+			continue
 		}
 
 		heading := 0

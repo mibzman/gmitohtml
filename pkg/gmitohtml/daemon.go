@@ -114,7 +114,7 @@ func fetch(u string) ([]byte, []byte, error) {
 	}
 
 	if !bytes.HasPrefix(header, []byte("2")) {
-		return header, []byte(fmt.Sprintf("Unexpected header: %s", header)), nil
+		return header, []byte(fmt.Sprintf(pageHeader+"Server sent unexpected header:<br><br><b>%s</b>", header) + pageFooter), nil
 	}
 
 	if bytes.HasPrefix(header, []byte("20 text/html")) {
@@ -223,13 +223,13 @@ func LastRequestTime() int64 {
 }
 
 // SetClientCertificate sets the client certificate to use for a domain.
-func SetClientCertificate(domain string, certificate string, privateKey string) error {
+func SetClientCertificate(domain string, certificate []byte, privateKey []byte) error {
 	if len(certificate) == 0 || len(privateKey) == 0 {
 		delete(clientCerts, domain)
 		return nil
 	}
 
-	clientCert, err := tls.LoadX509KeyPair(certificate, privateKey)
+	clientCert, err := tls.X509KeyPair(certificate, privateKey)
 	if err != nil {
 		return ErrInvalidCertificate
 	}
