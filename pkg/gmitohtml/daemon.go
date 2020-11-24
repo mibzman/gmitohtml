@@ -3,6 +3,7 @@ package gmitohtml
 import (
 	"bytes"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -14,8 +15,13 @@ import (
 
 var lastRequestTime = time.Now().Unix()
 
+var clientCerts = make(map[string]tls.Certificate)
+
+// ErrInvalidCertificate is the error returned when an invalid certificate is provided.
+var ErrInvalidCertificate = errors.New("invalid certificate")
+
 // Fetch downloads and converts a Gemini page.
-func fetch(u string, clientCertFile string, clientCertKey string) ([]byte, []byte, error) {
+func fetch(u string) ([]byte, []byte, error) {
 	if u == "" {
 		return nil, nil, ErrInvalidURL
 	}
@@ -37,6 +43,16 @@ func fetch(u string, clientCertFile string, clientCertKey string) ([]byte, []byt
 		// This must be enabled until most sites have transitioned away from
 		// using self-signed certificates.
 		InsecureSkipVerify: true,
+	}
+
+	certHost := requestURL.Hostname()
+	if strings.HasPrefix(certHost, "www.") {
+		certHost = certHost[4:]
+	}
+
+	clientCert, certAvailable := clientCerts[certHost]
+	if certAvailable {
+		tlsConfig.Certificates = []tls.Certificate{clientCert}
 	}
 
 	conn, err := tls.Dial("tcp", host, tlsConfig)
@@ -153,7 +169,7 @@ func handleRequest(writer http.ResponseWriter, request *http.Request) {
 		u.RawQuery = request.URL.RawQuery
 	}
 
-	header, data, err := fetch(u.String(), "", "")
+	header, data, err := fetch(u.String())
 	if err != nil {
 		fmt.Fprintf(writer, "Error: failed to fetch %s: %s", u, err)
 		return
@@ -204,4 +220,20 @@ func StartDaemon(address string) error {
 // LastRequestTime returns the time of the last request.
 func LastRequestTime() int64 {
 	return lastRequestTime
+}
+
+// SetClientCertificate sets the client certificate to use for a domain.
+func SetClientCertificate(domain string, certificate string, privateKey string) error {
+	if len(certificate) == 0 || len(privateKey) == 0 {
+		delete(clientCerts, domain)
+		return nil
+	}
+
+	clientCert, err := tls.LoadX509KeyPair(certificate, privateKey)
+	if err != nil {
+		return ErrInvalidCertificate
+	}
+
+	clientCerts[domain] = clientCert
+	return nil
 }
