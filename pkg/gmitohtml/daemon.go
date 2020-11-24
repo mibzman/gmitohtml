@@ -9,7 +9,10 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
+
+var lastRequestTime = time.Now().Unix()
 
 // Fetch downloads and converts a Gemini page.
 func fetch(u string, clientCertFile string, clientCertKey string) ([]byte, []byte, error) {
@@ -116,6 +119,9 @@ func handleIndex(writer http.ResponseWriter, request *http.Request) {
 
 func handleRequest(writer http.ResponseWriter, request *http.Request) {
 	defer request.Body.Close()
+
+	lastRequestTime = time.Now().Unix()
+
 	if request.URL == nil {
 		return
 	}
@@ -193,4 +199,9 @@ func StartDaemon(address string) error {
 	}()
 
 	return nil
+}
+
+// LastRequestTime returns the time of the last request.
+func LastRequestTime() int64 {
+	return lastRequestTime
 }
