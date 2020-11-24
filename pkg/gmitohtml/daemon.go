@@ -3,6 +3,7 @@ package gmitohtml
 import (
 	"bytes"
 	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -147,13 +148,6 @@ func handleRequest(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	inputText := request.PostFormValue("input")
-	if inputText != "" {
-		request.URL.RawQuery = inputText
-		http.Redirect(writer, request, request.URL.String(), http.StatusSeeOther)
-		return
-	}
-
 	pathSplit := strings.Split(request.URL.Path, "/")
 	if len(pathSplit) < 2 || pathSplit[1] != "gemini" {
 		writer.Write([]byte("Error: invalid protocol, only Gemini is supported"))
@@ -169,6 +163,13 @@ func handleRequest(writer http.ResponseWriter, request *http.Request) {
 		u.RawQuery = request.URL.RawQuery
 	}
 
+	inputText := request.PostFormValue("input")
+	if inputText != "" {
+		u.RawQuery = inputText
+		http.Redirect(writer, request, rewriteURL(u.String(), u), http.StatusSeeOther)
+		return
+	}
+
 	header, data, err := fetch(u.String())
 	if err != nil {
 		fmt.Fprintf(writer, "Error: failed to fetch %s: %s", u, err)
@@ -178,7 +179,7 @@ func handleRequest(writer http.ResponseWriter, request *http.Request) {
 	if len(header) > 0 && header[0] == '3' {
 		split := bytes.SplitN(header, []byte(" "), 2)
 		if len(split) == 2 {
-			http.Redirect(writer, request, rewriteURL(string(split[1]), request.URL), http.StatusSeeOther)
+			http.Redirect(writer, request, rewriteURL(string(split[1]), u), http.StatusSeeOther)
 			return
 		}
 	}
@@ -232,6 +233,11 @@ func SetClientCertificate(domain string, certificate []byte, privateKey []byte) 
 	clientCert, err := tls.X509KeyPair(certificate, privateKey)
 	if err != nil {
 		return ErrInvalidCertificate
+	}
+
+	leafCert, err := x509.ParseCertificate(clientCert.Certificate[0])
+	if err == nil {
+		clientCert.Leaf = leafCert
 	}
 
 	clientCerts[domain] = clientCert

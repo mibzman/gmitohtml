@@ -17,6 +17,10 @@ go get gitlab.com/tslocum/gmitohtml
 
 The resulting binary is available as `~/go/bin/gmitohtml`.
 
+## Configure
+
+See [CONFIGURATION.md](https://gitlab.com/tslocum/gmitohtml/blob/master/CONFIGURATION.md)
+
 ## Usage
 
 Run daemon at [http://localhost:1967](http://localhost:1967):
