@@ -11,13 +11,17 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"path"
 	"strings"
 	"time"
 )
 
 var lastRequestTime = time.Now().Unix()
 
-var clientCerts = make(map[string]tls.Certificate)
+var (
+	clientCerts     = make(map[string]tls.Certificate)
+	allowFileAccess bool
+)
 
 // ErrInvalidCertificate is the error returned when an invalid certificate is provided.
 var ErrInvalidCertificate = errors.New("invalid certificate")
@@ -165,12 +169,17 @@ func handleRequest(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	pathSplit := strings.Split(request.URL.Path, "/")
-	if len(pathSplit) < 2 || pathSplit[1] != "gemini" {
+	if len(pathSplit) < 2 || (pathSplit[1] != "gemini" && (!allowFileAccess || pathSplit[1] != "file")) {
 		writer.Write([]byte("Error: invalid protocol, only Gemini is supported"))
 		return
 	}
 
-	u, err := url.ParseRequestURI("gemini://" + strings.Join(pathSplit[2:], "/"))
+	scheme := "gemini://"
+	if pathSplit[1] == "file" {
+		scheme = "file://"
+	}
+
+	u, err := url.ParseRequestURI(scheme + strings.Join(pathSplit[2:], "/"))
 	if err != nil {
 		writer.Write([]byte("Error: invalid URL"))
 		return
@@ -186,9 +195,24 @@ func handleRequest(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	header, data, err := fetch(u.String())
-	if err != nil {
-		fmt.Fprintf(writer, "Error: failed to fetch %s: %s", u, err)
+	var header []byte
+	var data []byte
+	if scheme == "gemini://" {
+		header, data, err = fetch(u.String())
+		if err != nil {
+			fmt.Fprintf(writer, "Error: failed to fetch %s: %s", u, err)
+			return
+		}
+	} else if allowFileAccess && scheme == "file://" {
+		header = []byte("20 text/gemini; charset=utf-8")
+		data, err = ioutil.ReadFile(path.Join("/", strings.Join(pathSplit[2:], "/")))
+		if err != nil {
+			fmt.Fprintf(writer, "Error: failed to read file %s: %s", u, err)
+			return
+		}
+		data = Convert(data, u.String())
+	} else {
+		writer.Write([]byte("Error: invalid URL"))
 		return
 	}
 
@@ -219,10 +243,11 @@ func handleAssets(writer http.ResponseWriter, request *http.Request) {
 }
 
 // StartDaemon starts the page conversion daemon.
-func StartDaemon(address string) error {
-	loadAssets()
-
+func StartDaemon(address string, allowFile bool) error {
 	daemonAddress = address
+	allowFileAccess = allowFile
+
+	loadAssets()
 
 	handler := http.NewServeMux()
 	handler.HandleFunc("/assets/style.css", handleAssets)

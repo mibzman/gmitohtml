@@ -22,6 +22,11 @@ func rewriteURL(u string, loc *url.URL) string {
 	if daemonAddress != "" {
 		if strings.HasPrefix(u, "gemini://") {
 			return "http://" + daemonAddress + "/gemini/" + u[9:]
+		} else if strings.HasPrefix(u, "file://") {
+			if !allowFileAccess {
+				return "http://" + daemonAddress + "/?FileAccessNotAllowed"
+			}
+			return "http://" + daemonAddress + "/file/" + u[7:]
 		} else if strings.Contains(u, "://") {
 			return u
 		} else if loc != nil && len(u) > 0 && !strings.HasPrefix(u, "//") {

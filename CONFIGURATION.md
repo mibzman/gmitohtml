@@ -19,6 +19,14 @@ openssl req -x509 -out localhost.crt -keyout localhost.key \
 Files `localhost.crt` and `localhost.key` are generated. Rename these files to
 match the domain where the certificate will be used.
 
+## Allow file:// access
+
+By default, local files are not served by gmitohtml. When executed with the
+`--allow-file` argument, local files may be accessed via `file://`.
+
+For example, to view `/home/dioscuri/sites/gemlog/index.gmi`, navigate to
+`file:///home/dioscuri/sites/gemlog/index.gmi`. 
+ 
 # Example config.yaml
 
 ```yaml

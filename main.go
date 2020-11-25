@@ -33,9 +33,11 @@ func openBrowser(url string) {
 
 func main() {
 	var view bool
+	var allowFile bool
 	var daemon string
 	var configFile string
 	flag.BoolVar(&view, "view", false, "open web browser")
+	flag.BoolVar(&allowFile, "allow-file", false, "allow local file access via file://")
 	flag.StringVar(&daemon, "daemon", "", "start daemon on specified address")
 	flag.StringVar(&configFile, "config", "", "path to configuration file")
 	// TODO option to include response header in page
@@ -76,7 +78,7 @@ func main() {
 	}
 
 	if daemon != "" {
-		err := gmitohtml.StartDaemon(daemon)
+		err := gmitohtml.StartDaemon(daemon, allowFile)
 		if err != nil {
 			log.Fatal(err)
 		}
