@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"html"
 	"net/url"
 	"path"
 	"strings"
@@ -20,6 +21,11 @@ var assetLock sync.Mutex
 
 func rewriteURL(u string, loc *url.URL) string {
 	if daemonAddress != "" {
+		scheme := "gemini"
+		if strings.HasPrefix(loc.Path, "/file/") {
+			scheme = "file"
+		}
+
 		if strings.HasPrefix(u, "gemini://") {
 			return "http://" + daemonAddress + "/gemini/" + u[9:]
 		} else if strings.HasPrefix(u, "file://") {
@@ -34,9 +40,9 @@ func rewriteURL(u string, loc *url.URL) string {
 			if u[0] != '/' {
 				newPath = path.Join(loc.Path, u)
 			}
-			return "http://" + daemonAddress + "/gemini/" + loc.Host + newPath
+			return "http://" + daemonAddress + "/" + scheme + "/" + loc.Host + newPath
 		}
-		return "http://" + daemonAddress + "/gemini/" + u
+		return "http://" + daemonAddress + "/" + scheme + "/" + u
 	}
 	return u
 }
@@ -68,7 +74,7 @@ func Convert(page []byte, u string) []byte {
 		}
 
 		if preformatted {
-			result = append(result, line...)
+			result = append(result, html.EscapeString(string(line))...)
 			result = append(result, []byte("\n")...)
 			continue
 		}
@@ -89,9 +95,9 @@ func Convert(page []byte, u string) []byte {
 				linkURL = split[0]
 				linkLabel = split[1]
 			}
-			link := append([]byte(`<a href="`), rewriteURL(string(linkURL), parsedURL)...)
+			link := append([]byte(`<a href="`), html.EscapeString(rewriteURL(string(linkURL), parsedURL))...)
 			link = append(link, []byte(`">`)...)
-			link = append(link, linkLabel...)
+			link = append(link, html.EscapeString(string(linkLabel))...)
 			link = append(link, []byte(`</a>`)...)
 			result = append(result, link...)
 			result = append(result, []byte("<br>")...)
@@ -107,11 +113,11 @@ func Convert(page []byte, u string) []byte {
 			}
 		}
 		if heading > 0 {
-			result = append(result, []byte(fmt.Sprintf("<h%d>%s</h%d>", heading, line[heading:], heading))...)
+			result = append(result, []byte(fmt.Sprintf("<h%d>%s</h%d>", heading, html.EscapeString(string(line[heading:])), heading))...)
 			continue
 		}
 
-		result = append(result, line...)
+		result = append(result, html.EscapeString(string(line))...)
 		result = append(result, []byte("<br>")...)
 	}
 

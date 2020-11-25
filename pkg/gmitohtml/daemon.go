@@ -117,7 +117,7 @@ func fetch(u string) ([]byte, []byte, error) {
 		errorPage := []byte(pageHeader)
 		errorPage = append(errorPage, []byte(fmt.Sprintf("Server sent unexpected header:<br><br><b>%s</b>", header))...)
 		errorPage = append(errorPage, []byte(pageFooter)...)
-		return header, errorPage, nil
+		return header, fillTemplateVariables(errorPage, u, false), nil
 	}
 
 	if bytes.HasPrefix(header, []byte("20 text/html")) {
