@@ -393,5 +393,29 @@ template {
 [hidden] {
   display: none;
 }
+
+@media (prefers-color-scheme: dark) {
+	body {
+		color: white;
+		background-color: black;
+	}
+	h1, h2, h3, h4, h5, h6 {
+		color: white;
+	}
+	a {
+		color: #8d94ff;
+	}
+	a:hover {
+		color: white;
+	}
+	input {
+		background-color: black;
+		color: white;
+		border-color: gray;
+		border-width: 0.3em;
+		border-style: solid;
+		padding: 0.5em;
+	}
+}
 `, fs)
 }
