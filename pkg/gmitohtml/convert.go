@@ -38,7 +38,11 @@ func rewriteURL(u string, loc *url.URL) string {
 		} else if loc != nil && len(u) > 0 && !strings.HasPrefix(u, "//") {
 			newPath := u
 			if u[0] != '/' {
-				newPath = path.Join(loc.Path, u)
+				if loc.Path[len(loc.Path)-1] == '/' {
+					newPath = path.Join("/", loc.Path, u)
+				} else {
+					newPath = path.Join("/", path.Dir(loc.Path), u)
+				}
 			}
 			return "http://" + daemonAddress + "/" + scheme + "/" + loc.Host + newPath
 		}
@@ -84,17 +88,26 @@ func Convert(page []byte, u string) []byte {
 			if line[splitStart] == ' ' || line[splitStart] == '\t' {
 				splitStart++
 			}
-			split := bytes.SplitN(line[splitStart:], []byte(" "), 2)
-			if len(split) != 2 {
+
+			var split [][]byte
+			firstSpace := bytes.IndexRune(line[splitStart:], ' ')
+			firstTab := bytes.IndexRune(line[splitStart:], '\t')
+			if firstSpace != -1 && (firstTab == -1 || firstSpace < firstTab) {
+				split = bytes.SplitN(line[splitStart:], []byte(" "), 2)
+			} else if firstTab != -1 {
 				split = bytes.SplitN(line[splitStart:], []byte("\t"), 2)
 			}
 
-			linkURL := line[splitStart:]
-			linkLabel := line[splitStart:]
+			var linkURL []byte
+			var linkLabel []byte
 			if len(split) == 2 {
 				linkURL = split[0]
 				linkLabel = split[1]
+			} else {
+				linkURL = line[splitStart:]
+				linkLabel = line[splitStart:]
 			}
+
 			link := append([]byte(`<a href="`), html.EscapeString(rewriteURL(string(linkURL), parsedURL))...)
 			link = append(link, []byte(`">`)...)
 			link = append(link, html.EscapeString(string(linkLabel))...)

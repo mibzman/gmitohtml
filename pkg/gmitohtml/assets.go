@@ -399,15 +399,25 @@ template {
 		color: white;
 		background-color: black;
 	}
+
 	h1, h2, h3, h4, h5, h6 {
 		color: white;
 	}
+
 	a {
-		color: #8d94ff;
+		color: rgb(26, 168, 245);
+		text-decoration: none;
 	}
-	a:hover {
-		color: white;
+	a:hover,
+	a:focus,
+	a:active {
+		color: rgb(24, 151, 219);
+		text-decoration: underline;
 	}
+	a:visited {
+		color: rgb(200, 118, 255);
+	}
+
 	input {
 		background-color: black;
 		color: white;

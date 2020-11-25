@@ -1,6 +1,7 @@
 1.0.1:
-- Display navigation bar in pages
 - Add option to allow local file access
+- Display navigation bar in pages
+- Support dark themed pages via prefers-color-scheme
 
 1.0.0:
 - Initial release
