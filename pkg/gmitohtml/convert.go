@@ -26,25 +26,35 @@ func rewriteURL(u string, loc *url.URL) string {
 			scheme = "file"
 		}
 
-		if strings.HasPrefix(u, "gemini://") {
-			return "http://" + daemonAddress + "/gemini/" + u[9:]
-		} else if strings.HasPrefix(u, "file://") {
+		if strings.HasPrefix(u, "file://") {
 			if !allowFileAccess {
 				return "http://" + daemonAddress + "/?FileAccessNotAllowed"
 			}
 			return "http://" + daemonAddress + "/file/" + u[7:]
+		}
+
+		offset := 0
+		if strings.HasPrefix(u, "gemini://") {
+			offset = 9
+		}
+		firstSlash := strings.IndexRune(u[offset:], '/')
+		if firstSlash != -1 {
+			u = strings.ToLower(u[:firstSlash+offset]) + u[firstSlash+offset:]
+		}
+
+		if strings.HasPrefix(u, "gemini://") {
+			return "http://" + daemonAddress + "/gemini/" + u[9:]
 		} else if strings.Contains(u, "://") {
 			return u
 		} else if loc != nil && len(u) > 0 && !strings.HasPrefix(u, "//") {
-			newPath := u
 			if u[0] != '/' {
 				if loc.Path[len(loc.Path)-1] == '/' {
-					newPath = path.Join("/", loc.Path, u)
+					u = path.Join("/", loc.Path, u)
 				} else {
-					newPath = path.Join("/", path.Dir(loc.Path), u)
+					u = path.Join("/", path.Dir(loc.Path), u)
 				}
 			}
-			return "http://" + daemonAddress + "/" + scheme + "/" + loc.Host + newPath
+			return "http://" + daemonAddress + "/" + scheme + "/" + strings.ToLower(loc.Host) + u
 		}
 		return "http://" + daemonAddress + "/" + scheme + "/" + u
 	}

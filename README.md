@@ -10,6 +10,8 @@ conversion tool and daemon
 
 [**Download gmitohtml**](https://gmitohtml.rocketnine.space/download/?sort=name&order=desc)
 
+gmitohtml is available on Android as [Xenia](https://gitlab.com/tslocum/xenia).
+
 ## Compile
 
 gmitohtml is written in [Go](https://golang.org). Run the following command to
