@@ -3,6 +3,14 @@ default. You may specify a different location via the `--config` argument.
 
 # Configuration options
 
+## Bookmarks
+
+Bookmarks are defined as a list of URLs and corresponding label.
+
+Defining bookmarks manually via configuration file is possible, however it is
+not required as the gmitohtml configuration file is updated when bookmarks are
+modified using the web interface.
+
 ## Client certificates
 
 Client certificates may be specified via the `Certs` option.
@@ -30,6 +38,10 @@ For example, to view `/home/dioscuri/sites/gemlog/index.gmi`, navigate to
 # Example config.yaml
 
 ```yaml
+bookmarks:
+  gemini://gemini.circumlunar.space/: Gemini protocol
+  gemini://gus.guru/: GUS - Gemini Universal Search
+
 certs:
   astrobotany.mozz.us:
     cert: /home/dioscuri/.config/gmitohtml/astrobotany.mozz.us.crt

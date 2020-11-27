@@ -12,22 +12,15 @@ const pageHeader = `
 <body>
 <form method="post" action="/" novalidate>
 <input type="url" name="address" placeholder="Address" size="40" value="~GEMINICURRENTURL~" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" css="width: 100%;" ~GEMINIAUTOFOCUS~>
-</form>
-<br>`
+</form>`
 
-const pageFooter = `
-</body>
-</html>
+const navigationMenuText = `
+<div style="padding-left: 84px;padding-bottom: 7px;">
+<a href="/bookmarks" class="navlink">View bookmarks</a> &nbsp;-&nbsp; <a href="/bookmarks?add=~GEMINICURRENTURL~" class="navlink">Add bookmark</a>
+</div>
 `
 
-const indexPage = pageHeader + `
-<ul>
-<li><a href="/gemini/gus.guru/">GUS - Gemini Universal Search</a></li>
-<li><a href="/gemini/gemini.circumlunar.space/">Gemini protocol</a></li>
-</ul>
-` + pageFooter
-
-const inputPage = pageHeader + `
+const inputPrompt = `
 <form method="post" action="~GEMINIINPUTFORM~">
 <div style="padding-top: 25px;">
 <span style="font-size: 1.5em;">~GEMINIINPUTPROMPT~</span><br><br>
@@ -36,7 +29,12 @@ const inputPage = pageHeader + `
 </div>
 </div>
 </form>
-` + pageFooter
+`
+
+const pageFooter = `
+</body>
+</html>
+`
 
 func loadAssets() {
 	fs["/assets/style.css"] = loadFile("style.css", `
@@ -121,6 +119,34 @@ margin: 0;
 
 a {
   background-color: transparent;
+}
+
+a {
+  color: #0000EE;
+  text-decoration: none;
+}
+a:hover,
+a:focus,
+a:active {
+  color: #FF0000;
+  text-decoration: underline;
+}
+a:visited {
+  color: #551A8B;
+}
+
+a.navlink {
+  color: #0000EE;
+  text-decoration: none;
+}
+a.navlink:hover,
+a.navlink:focus,
+a.navlink:active {
+  color: #FF0000;
+  text-decoration: underline;
+}
+a.navlink:visited {
+  color: #0000EE;
 }
 
 /**
@@ -395,37 +421,51 @@ template {
 }
 
 @media (prefers-color-scheme: dark) {
-	body {
-		color: white;
-		background-color: black;
-	}
+  body {
+    color: white;
+    background-color: black;
+  }
 
-	h1, h2, h3, h4, h5, h6 {
-		color: white;
-	}
+  h1, h2, h3, h4, h5, h6 {
+    color: white;
+  }
 
-	a {
-		color: rgb(26, 168, 245);
-		text-decoration: none;
-	}
-	a:hover,
-	a:focus,
-	a:active {
-		color: rgb(24, 151, 219);
-		text-decoration: underline;
-	}
-	a:visited {
-		color: rgb(200, 118, 255);
-	}
+  a {
+    color: rgb(26, 168, 245);
+    text-decoration: none;
+  }
+  a:hover,
+  a:focus,
+  a:active {
+    color: rgb(24, 151, 219);
+    text-decoration: underline;
+  }
+  a:visited {
+    color: rgb(200, 118, 255);
+  }
 
-	input {
-		background-color: black;
-		color: white;
-		border-color: gray;
-		border-width: 0.3em;
-		border-style: solid;
-		padding: 0.5em;
-	}
+  a.navlink {
+    color: rgb(26, 168, 245);
+    text-decoration: none;
+  }
+  a.navlink:hover,
+  a.navlink:focus,
+  a.navlink:active {
+    color: rgb(24, 151, 219);
+    text-decoration: underline;
+  }
+  a.navlink:visited {
+    color: rgb(26, 168, 245);
+  }
+
+  input {
+    background-color: black;
+    color: white;
+    border-color: gray;
+    border-width: 0.3em;
+    border-style: solid;
+    padding: 0.5em;
+  }
 }
 `, fs)
 }

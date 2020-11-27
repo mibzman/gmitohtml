@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"sort"
 	"strings"
 	"time"
 )
@@ -19,14 +20,36 @@ import (
 var lastRequestTime = time.Now().Unix()
 
 var (
-	clientCerts     = make(map[string]tls.Certificate)
-	allowFileAccess bool
+	clientCerts        = make(map[string]tls.Certificate)
+	bookmarks          = make(map[string]string)
+	bookmarksSorted    []string
+	allowFileAccess    bool
+	onBookmarksChanged func()
 )
+
+var defaultBookmarks = map[string]string{
+	"gemini://gemini.circumlunar.space/": "Project Gemini",
+	"gemini://gus.guru/":                 "GUS - Gemini Universal Search",
+}
 
 // ErrInvalidCertificate is the error returned when an invalid certificate is provided.
 var ErrInvalidCertificate = errors.New("invalid certificate")
 
-// Fetch downloads and converts a Gemini page.
+func bookmarksList() []byte {
+	fakeURL, _ := url.Parse("/") // Always succeeds
+
+	var b bytes.Buffer
+	b.Write([]byte(`<div style="padding-left: 12px;">`))
+	b.Write([]byte(`<br><a href="/bookmarks" class="navlink">Bookmarks</a><br></div>`))
+	b.Write([]byte(`<ul>`))
+	for _, u := range bookmarksSorted {
+		b.Write([]byte(fmt.Sprintf(`<li><a href="%s">%s</a></li>`, rewriteURL(u, fakeURL), bookmarks[u])))
+	}
+	b.Write([]byte("</ul>"))
+	return b.Bytes()
+}
+
+// fetch downloads and converts a Gemini page.
 func fetch(u string) ([]byte, []byte, error) {
 	if u == "" {
 		return nil, nil, ErrInvalidURL
@@ -94,7 +117,10 @@ func fetch(u string) ([]byte, []byte, error) {
 	if requestInput {
 		requestSensitiveInput := bytes.HasPrefix(header, []byte("11"))
 
-		data = []byte(inputPage)
+		data = []byte(pageHeader)
+		data = append(data, navigationMenu()...)
+
+		data = append(data, []byte(inputPrompt)...)
 
 		data = bytes.Replace(data, []byte("~GEMINIINPUTFORM~"), []byte(html.EscapeString(rewriteURL(u, requestURL))), 1)
 
@@ -133,7 +159,12 @@ func handleIndex(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	writer.Write(fillTemplateVariables([]byte(indexPage), request.URL.String(), true))
+	var page []byte
+	page = append(page, pageHeader...)
+	page = append(page, bookmarksList()...)
+	page = append(page, pageFooter...)
+
+	writer.Write(fillTemplateVariables(page, request.URL.String(), true))
 }
 
 func fillTemplateVariables(data []byte, currentURL string, autofocus bool) []byte {
@@ -242,6 +273,81 @@ func handleAssets(writer http.ResponseWriter, request *http.Request) {
 	http.FileServer(fs).ServeHTTP(writer, request)
 }
 
+func handleBookmarks(writer http.ResponseWriter, request *http.Request) {
+	writer.Header().Set("Content-Type", "text/html; charset=utf-8")
+	var data []byte
+
+	postAddress := request.PostFormValue("address")
+	postLabel := request.PostFormValue("label")
+	if postLabel == "" && postAddress != "" {
+		postLabel = postAddress
+	}
+
+	editBookmark := request.FormValue("edit")
+	if editBookmark != "" {
+		if postLabel == "" {
+			label, ok := bookmarks[editBookmark]
+			if !ok {
+				writer.Write([]byte("<h1>Error: bookmark not found</h1>"))
+				return
+			}
+
+			data = []byte(pageHeader)
+
+			data = append(data, []byte(fmt.Sprintf(`<br><form method="post" action="%s"><h3>Edit bookmark</h3><input type="text" size="40" name="address" placeholder="Address" value="%s" autofocus><br><br><input type="text" size="40" name="label" placeholder="Label" value="%s"><br><br><input type="submit" value="Update"></form>`, request.URL.Path+"?"+request.URL.RawQuery, html.EscapeString(editBookmark), html.EscapeString(label)))...)
+
+			data = append(data, []byte(pageFooter)...)
+
+			writer.Write(fillTemplateVariables(data, "", false))
+			return
+		}
+
+		if editBookmark != postAddress || bookmarks[editBookmark] != postLabel {
+			RemoveBookmark(editBookmark)
+			AddBookmark(postAddress, postLabel)
+		}
+	} else if postLabel != "" {
+		AddBookmark(postAddress, postLabel)
+	}
+
+	deleteBookmark := request.FormValue("delete")
+	if deleteBookmark != "" {
+		RemoveBookmark(deleteBookmark)
+	}
+
+	data = []byte(pageHeader)
+
+	addBookmark := request.FormValue("add")
+
+	addressFocus := "autofocus"
+	labelFocus := ""
+	if addBookmark != "" {
+		addressFocus = ""
+		labelFocus = "autofocus"
+	}
+
+	data = append(data, []byte(fmt.Sprintf(`<br><form method="post" action="/bookmarks"><h3>Add bookmark</h3><input type="text" size="40" name="address" placeholder="Address" value="%s" %s><br><br><input type="text" size="40" name="label" placeholder="Label" %s><br><br><input type="submit" value="Add"></form>`, html.EscapeString(addBookmark), addressFocus, labelFocus))...)
+
+	if len(bookmarks) > 0 && addBookmark == "" {
+		fakeURL, _ := url.Parse("/") // Always succeeds
+
+		data = append(data, []byte(`<br><h3>Bookmarks</h3><table border="1" cellpadding="5">`)...)
+		for _, u := range bookmarksSorted {
+			data = append(data, []byte(fmt.Sprintf(`<tr><td>%s<br><a href="%s">%s</a></td><td><a href="/bookmarks?edit=%s" class="navlink">Edit</a></td><td><a href="/bookmarks?delete=%s" onclick="return confirm('Are you sure you want to delete this bookmark?')" class="navlink">Delete</a></td></tr>`, html.EscapeString(bookmarks[u]), html.EscapeString(rewriteURL(u, fakeURL)), html.EscapeString(u), html.EscapeString(url.PathEscape(u)), html.EscapeString(url.PathEscape(u))))...)
+		}
+		data = append(data, []byte(`</table>`)...)
+	}
+
+	data = append(data, []byte(pageFooter)...)
+
+	writer.Write(fillTemplateVariables(data, "", false))
+}
+
+// SetOnBookmarksChanged sets the function called when a bookmark is changed.
+func SetOnBookmarksChanged(f func()) {
+	onBookmarksChanged = f
+}
+
 // StartDaemon starts the page conversion daemon.
 func StartDaemon(address string, allowFile bool) error {
 	daemonAddress = address
@@ -249,8 +355,15 @@ func StartDaemon(address string, allowFile bool) error {
 
 	loadAssets()
 
+	if len(bookmarks) == 0 {
+		for u, label := range defaultBookmarks {
+			AddBookmark(u, label)
+		}
+	}
+
 	handler := http.NewServeMux()
 	handler.HandleFunc("/assets/style.css", handleAssets)
+	handler.HandleFunc("/bookmarks", handleBookmarks)
 	handler.HandleFunc("/", handleRequest)
 	go func() {
 		log.Fatal(http.ListenAndServe(address, handler))
@@ -283,4 +396,48 @@ func SetClientCertificate(domain string, certificate []byte, privateKey []byte) 
 
 	clientCerts[domain] = clientCert
 	return nil
+}
+
+// AddBookmark adds a bookmark.
+func AddBookmark(u string, label string) {
+	parsed, err := url.Parse(u)
+	if err != nil {
+		return
+	}
+	if parsed.Scheme == "" {
+		parsed.Scheme = "gemini"
+	}
+	parsed.Host = strings.ToLower(parsed.Host)
+
+	bookmarks[parsed.String()] = label
+
+	bookmarksUpdated()
+}
+
+// GetBookmarks returns all bookmarks.
+func GetBookmarks() map[string]string {
+	return bookmarks
+}
+
+// RemoveBookmark removes a bookmark.
+func RemoveBookmark(u string) {
+	delete(bookmarks, u)
+
+	bookmarksUpdated()
+}
+
+func bookmarksUpdated() {
+	var allURLs []string
+	for u := range bookmarks {
+		allURLs = append(allURLs, u)
+	}
+	sort.Slice(allURLs, func(i, j int) bool {
+		return strings.ToLower(bookmarks[allURLs[i]]) < strings.ToLower(bookmarks[allURLs[j]])
+	})
+
+	bookmarksSorted = allURLs
+
+	if onBookmarksChanged != nil {
+		onBookmarksChanged()
+	}
 }

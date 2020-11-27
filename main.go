@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
-	"path"
 	"runtime"
 
 	"gitlab.com/tslocum/gmitohtml/pkg/gmitohtml"
@@ -43,20 +42,26 @@ func main() {
 	// TODO option to include response header in page
 	flag.Parse()
 
+	defaultConfig := defaultConfigPath()
 	if configFile == "" {
-		homedir, err := os.UserHomeDir()
-		if err == nil && homedir != "" {
-			defaultConfig := path.Join(homedir, ".config", "gmitohtml", "config.yaml")
-			if _, err := os.Stat(defaultConfig); !os.IsNotExist(err) {
-				configFile = defaultConfig
-			}
-		}
+		configFile = defaultConfig
 	}
 
 	if configFile != "" {
-		err := readconfig(configFile)
-		if err != nil {
-			log.Fatalf("failed to read configuration file at %s: %v\nSee CONFIGURATION.md for information on configuring gmitohtml", configFile, err)
+		var configExists bool
+		if _, err := os.Stat(defaultConfig); !os.IsNotExist(err) {
+			configExists = true
+		}
+
+		if configExists || configFile != defaultConfig {
+			err := readconfig(configFile)
+			if err != nil {
+				log.Fatalf("failed to read configuration file at %s: %v\nSee CONFIGURATION.md for information on configuring gmitohtml", configFile, err)
+			}
+
+			for u, label := range config.Bookmarks {
+				gmitohtml.AddBookmark(u, label)
+			}
 		}
 	}
 
@@ -78,6 +83,15 @@ func main() {
 	}
 
 	if daemon != "" {
+		gmitohtml.SetOnBookmarksChanged(func() {
+			config.Bookmarks = gmitohtml.GetBookmarks()
+
+			err := saveConfig(configFile)
+			if err != nil {
+				log.Fatal(err)
+			}
+		})
+
 		err := gmitohtml.StartDaemon(daemon, allowFile)
 		if err != nil {
 			log.Fatal(err)
