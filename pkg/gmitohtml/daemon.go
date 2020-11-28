@@ -39,8 +39,6 @@ func bookmarksList() []byte {
 	fakeURL, _ := url.Parse("/") // Always succeeds
 
 	var b bytes.Buffer
-	b.Write([]byte(`<div style="padding-left: 12px;">`))
-	b.Write([]byte(`<br><a href="/bookmarks" class="navlink">Bookmarks</a><br></div>`))
 	b.Write([]byte(`<ul>`))
 	for _, u := range bookmarksSorted {
 		b.Write([]byte(fmt.Sprintf(`<li><a href="%s">%s</a></li>`, rewriteURL(u, fakeURL), bookmarks[u])))
@@ -118,7 +116,6 @@ func fetch(u string) ([]byte, []byte, error) {
 		requestSensitiveInput := bytes.HasPrefix(header, []byte("11"))
 
 		data = []byte(pageHeader)
-		data = append(data, navigationMenu()...)
 
 		data = append(data, []byte(inputPrompt)...)
 
@@ -294,7 +291,7 @@ func handleBookmarks(writer http.ResponseWriter, request *http.Request) {
 
 			data = []byte(pageHeader)
 
-			data = append(data, []byte(fmt.Sprintf(`<br><form method="post" action="%s"><h3>Edit bookmark</h3><input type="text" size="40" name="address" placeholder="Address" value="%s" autofocus><br><br><input type="text" size="40" name="label" placeholder="Label" value="%s"><br><br><input type="submit" value="Update"></form>`, request.URL.Path+"?"+request.URL.RawQuery, html.EscapeString(editBookmark), html.EscapeString(label)))...)
+			data = append(data, []byte(fmt.Sprintf(`<form method="post" action="%s"><h3>Edit bookmark</h3><input type="text" size="40" name="address" placeholder="Address" value="%s" autofocus><br><br><input type="text" size="40" name="label" placeholder="Label" value="%s"><br><br><input type="submit" value="Update"></form>`, request.URL.Path+"?"+request.URL.RawQuery, html.EscapeString(editBookmark), html.EscapeString(label)))...)
 
 			data = append(data, []byte(pageFooter)...)
 
@@ -326,7 +323,7 @@ func handleBookmarks(writer http.ResponseWriter, request *http.Request) {
 		labelFocus = "autofocus"
 	}
 
-	data = append(data, []byte(fmt.Sprintf(`<br><form method="post" action="/bookmarks"><h3>Add bookmark</h3><input type="text" size="40" name="address" placeholder="Address" value="%s" %s><br><br><input type="text" size="40" name="label" placeholder="Label" %s><br><br><input type="submit" value="Add"></form>`, html.EscapeString(addBookmark), addressFocus, labelFocus))...)
+	data = append(data, []byte(fmt.Sprintf(`<form method="post" action="/bookmarks"><h3>Add bookmark</h3><input type="text" size="40" name="address" placeholder="Address" value="%s" %s><br><br><input type="text" size="40" name="label" placeholder="Label" %s><br><br><input type="submit" value="Add"></form>`, html.EscapeString(addBookmark), addressFocus, labelFocus))...)
 
 	if len(bookmarks) > 0 && addBookmark == "" {
 		fakeURL, _ := url.Parse("/") // Always succeeds

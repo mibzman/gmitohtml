@@ -10,15 +10,15 @@ const pageHeader = `
 <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
+<div>
 <form method="post" action="/" novalidate>
-<input type="url" name="address" placeholder="Address" size="40" value="~GEMINICURRENTURL~" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" css="width: 100%;" ~GEMINIAUTOFOCUS~>
-</form>`
-
-const navigationMenuText = `
-<div style="padding-left: 84px;padding-bottom: 7px;">
+<input type="url" name="address" id="navigationaddress" placeholder="Address" size="40" value="~GEMINICURRENTURL~" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" ~GEMINIAUTOFOCUS~>
+</form>
+<div id="navigationbar"">
 <a href="/bookmarks" class="navlink">View bookmarks</a> &nbsp;-&nbsp; <a href="/bookmarks?add=~GEMINICURRENTURL~" class="navlink">Add bookmark</a>
 </div>
-`
+</div>
+<div id="content">`
 
 const inputPrompt = `
 <form method="post" action="~GEMINIINPUTFORM~">
@@ -32,6 +32,7 @@ const inputPrompt = `
 `
 
 const pageFooter = `
+</div>
 </body>
 </html>
 `
@@ -61,7 +62,21 @@ html {
  */
 
 body {
+  margin: 0;
+  width: 100%;
+}
+
+#content {
   margin: 0.67em;
+}
+
+#navigationaddress {
+  box-sizing: border-box;
+  width: 100%
+}
+
+#navigationbar {
+  padding: 4px 21px 7px 21px;
 }
 
 /**

@@ -61,13 +61,6 @@ func rewriteURL(u string, loc *url.URL) string {
 	return u
 }
 
-func navigationMenu() []byte {
-	if daemonAddress == "" {
-		return nil
-	}
-	return []byte(navigationMenuText)
-}
-
 // Convert converts text/gemini to text/html.
 func Convert(page []byte, u string) []byte {
 	var result []byte
@@ -156,7 +149,6 @@ func Convert(page []byte, u string) []byte {
 	}
 
 	data := []byte(pageHeader)
-	data = append(data, navigationMenu()...)
 	data = append(data, result...)
 	data = append(data, []byte(pageFooter)...)
 	return fillTemplateVariables(data, u, false)
