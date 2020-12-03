@@ -9,16 +9,22 @@ const pageHeader = `
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="stylesheet" href="/assets/style.css">
 </head>
-<body>
+<body>`
+
+const navHeader = `
 <div>
 <form method="post" action="/" novalidate>
 <input type="url" name="address" id="navigationaddress" placeholder="Address" size="40" value="~GEMINICURRENTURL~" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" ~GEMINIAUTOFOCUS~>
 </form>
-<div id="navigationbar"">
+<div id="navigationbar">
 <a href="/bookmarks" class="navlink">View bookmarks</a> &nbsp;-&nbsp; <a href="/bookmarks?add=~GEMINICURRENTURL~" class="navlink">Add bookmark</a>
 </div>
 </div>
-<div id="content">`
+`
+
+const contentHeader = `
+<div id="content">
+`
 
 const inputPrompt = `
 <form method="post" action="~GEMINIINPUTFORM~">

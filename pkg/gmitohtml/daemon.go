@@ -115,7 +115,7 @@ func fetch(u string) ([]byte, []byte, error) {
 	if requestInput {
 		requestSensitiveInput := bytes.HasPrefix(header, []byte("11"))
 
-		data = []byte(pageHeader)
+		data = newPage()
 
 		data = append(data, []byte(inputPrompt)...)
 
@@ -137,7 +137,7 @@ func fetch(u string) ([]byte, []byte, error) {
 	}
 
 	if !bytes.HasPrefix(header, []byte("2")) {
-		errorPage := []byte(pageHeader)
+		errorPage := newPage()
 		errorPage = append(errorPage, []byte(fmt.Sprintf("Server sent unexpected header:<br><br><b>%s</b>", header))...)
 		errorPage = append(errorPage, []byte(pageFooter)...)
 		return header, fillTemplateVariables(errorPage, u, false), nil
@@ -156,8 +156,7 @@ func handleIndex(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	var page []byte
-	page = append(page, pageHeader...)
+	page := newPage()
 	page = append(page, bookmarksList()...)
 	page = append(page, pageFooter...)
 
@@ -289,7 +288,7 @@ func handleBookmarks(writer http.ResponseWriter, request *http.Request) {
 				return
 			}
 
-			data = []byte(pageHeader)
+			data = newPage()
 
 			data = append(data, []byte(fmt.Sprintf(`<form method="post" action="%s"><h3>Edit bookmark</h3><input type="text" size="40" name="address" placeholder="Address" value="%s" autofocus><br><br><input type="text" size="40" name="label" placeholder="Label" value="%s"><br><br><input type="submit" value="Update"></form>`, request.URL.Path+"?"+request.URL.RawQuery, html.EscapeString(editBookmark), html.EscapeString(label)))...)
 
@@ -312,7 +311,7 @@ func handleBookmarks(writer http.ResponseWriter, request *http.Request) {
 		RemoveBookmark(deleteBookmark)
 	}
 
-	data = []byte(pageHeader)
+	data = newPage()
 
 	addBookmark := request.FormValue("add")
 
