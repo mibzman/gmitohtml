@@ -37,8 +37,8 @@ const pageFooter = `
 </html>
 `
 
-func loadAssets() {
-	fs["/assets/style.css"] = loadFile("style.css", `
+// StyleCSS specifies page styling.
+const StyleCSS = `
 /*! normalize.css v8.0.1 | MIT License | github.com/necolas/normalize.css */
 
 /* Document
@@ -482,5 +482,8 @@ template {
     padding: 0.5em;
   }
 }
-`, fs)
+`
+
+func loadAssets() {
+	fs["/assets/style.css"] = loadFile("style.css", StyleCSS, fs)
 }
