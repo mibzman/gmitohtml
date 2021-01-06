@@ -345,8 +345,11 @@ func SetOnBookmarksChanged(f func()) {
 }
 
 // StartDaemon starts the page conversion daemon.
-func StartDaemon(address string, allowFile bool) error {
+func StartDaemon(address string, hostname string, allowFile bool) error {
 	daemonAddress = address
+	if hostname != "" {
+		daemonAddress = hostname
+	}
 	allowFileAccess = allowFile
 
 	loadAssets()
