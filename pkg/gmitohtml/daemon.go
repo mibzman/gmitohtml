@@ -117,7 +117,7 @@ func fetch(u string) ([]byte, []byte, error) {
 
 		data = newPage()
 
-		data = append(data, []byte(inputPrompt)...)
+		// data = append(data, []byte(inputPrompt)...)
 
 		data = bytes.Replace(data, []byte("~GEMINIINPUTFORM~"), []byte(html.EscapeString(rewriteURL(u, requestURL))), 1)
 
@@ -196,17 +196,17 @@ func handleRequest(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	pathSplit := strings.Split(request.URL.Path, "/")
-	if len(pathSplit) < 2 || (pathSplit[1] != "gemini" && (!allowFileAccess || pathSplit[1] != "file")) {
-		writer.Write([]byte("Error: invalid protocol, only Gemini is supported"))
-		return
-	}
+	// if len(pathSplit) < 2 || (pathSplit[1] != "gemini" && (!allowFileAccess || pathSplit[1] != "file")) {
+	// 	writer.Write([]byte("Error: invalid protocol, only Gemini is supported"))
+	// 	return
+	// }
 
 	scheme := "gemini://"
-	if pathSplit[1] == "file" {
-		scheme = "file://"
-	}
+	// if pathSplit[1] == "file" {
+	// 	scheme = "file://"
+	// }
 
-	u, err := url.ParseRequestURI(scheme + strings.Join(pathSplit[2:], "/"))
+	u, err := url.ParseRequestURI(scheme + "localhost/" + strings.Join(pathSplit[0:], "/"))
 	if err != nil {
 		writer.Write([]byte("Error: invalid URL"))
 		return
