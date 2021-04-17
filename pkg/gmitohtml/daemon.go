@@ -117,7 +117,7 @@ func fetch(u string) ([]byte, []byte, error) {
 
 		data = newPage()
 
-		// data = append(data, []byte(inputPrompt)...)
+		data = append(data, []byte(inputPrompt)...)
 
 		data = bytes.Replace(data, []byte("~GEMINIINPUTFORM~"), []byte(html.EscapeString(rewriteURL(u, requestURL))), 1)
 
@@ -157,7 +157,7 @@ func handleIndex(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	page := newPage()
-	page = append(page, bookmarksList()...)
+	// page = append(page, bookmarksList()...)
 	page = append(page, pageFooter...)
 
 	writer.Write(fillTemplateVariables(page, request.URL.String(), true))
@@ -357,11 +357,11 @@ func StartDaemon(address string, hostname string, allowFile bool) error {
 
 	loadAssets()
 
-	if len(bookmarks) == 0 {
-		for u, label := range defaultBookmarks {
-			AddBookmark(u, label)
-		}
-	}
+	// if len(bookmarks) == 0 {
+	// 	for u, label := range defaultBookmarks {
+	// 		AddBookmark(u, label)
+	// 	}
+	// }
 
 	handler := http.NewServeMux()
 	handler.HandleFunc("/assets/style.css", handleAssets)
