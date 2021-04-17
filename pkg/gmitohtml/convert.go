@@ -16,6 +16,7 @@ import (
 var ErrInvalidURL = errors.New("invalid URL")
 
 var daemonAddress string
+var hostAddress string
 
 var assetLock sync.Mutex
 

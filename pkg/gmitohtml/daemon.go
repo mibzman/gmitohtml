@@ -206,7 +206,8 @@ func handleRequest(writer http.ResponseWriter, request *http.Request) {
 	// 	scheme = "file://"
 	// }
 
-	u, err := url.ParseRequestURI(scheme + "localhost/" + strings.Join(pathSplit[0:], "/"))
+	//TODO: take an input here for where to send the request somewhere else if needed
+	u, err := url.ParseRequestURI(scheme + hostAddress + "/" + strings.Join(pathSplit[0:], "/"))
 	if err != nil {
 		writer.Write([]byte("Error: invalid URL"))
 		return
@@ -348,7 +349,9 @@ func SetOnBookmarksChanged(f func()) {
 func StartDaemon(address string, hostname string, allowFile bool) error {
 	daemonAddress = address
 	if hostname != "" {
-		daemonAddress = hostname
+		hostAddress = hostname
+	} else {
+		hostAddress = ""
 	}
 	allowFileAccess = allowFile
 
