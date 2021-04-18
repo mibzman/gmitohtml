@@ -8,7 +8,7 @@ import (
 	"os"
 	"path"
 
-	"gitlab.com/tslocum/gmitohtml/pkg/gmitohtml"
+	"github.com/mibzman/gmitohtml/pkg/gmitohtml"
 	"gopkg.in/yaml.v3"
 )
 
