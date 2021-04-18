@@ -207,7 +207,7 @@ func handleRequest(writer http.ResponseWriter, request *http.Request) {
 	// }
 
 	//TODO: take an input here for where to send the request somewhere else if needed
-	u, err := url.ParseRequestURI(scheme + hostAddress + "/" + strings.Join(pathSplit[0:], "/"))
+	u, err := url.ParseRequestURI(scheme + hostAddress + strings.Join(pathSplit[0:], "/"))
 	if err != nil {
 		writer.Write([]byte("Error: invalid URL"))
 		return

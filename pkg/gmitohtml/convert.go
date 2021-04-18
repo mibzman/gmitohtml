@@ -44,9 +44,8 @@ func rewriteURL(u string, loc *url.URL) string {
 		}
 
 		if strings.HasPrefix(u, "gemini://") {
-			return "http://" + daemonAddress + "/gemini/" + u[9:]
+			return "http://" + u[9:]
 		} else if strings.Contains(u, "://") {
-			// log.Printf("second", u)
 			return u
 		} else if loc != nil && len(u) > 0 && !strings.HasPrefix(u, "//") {
 			if u[0] != '/' {
@@ -57,9 +56,7 @@ func rewriteURL(u string, loc *url.URL) string {
 				}
 			}
 
-			// + "/" + scheme  + strings.ToLower(loc.Host) + "/"
 			result := "http://" + daemonAddress + u
-			// log.Printf("third", result)
 			return result
 		}
 		return "http://" + daemonAddress + "/" + scheme + "/" + u
@@ -131,7 +128,6 @@ func Convert(page []byte, u string) []byte {
 				linkURL = line[splitStart:]
 				linkLabel = line[splitStart:]
 			}
-			// log.Printf("linkURL: %v", string(linkURL[:]))
 			link := append([]byte(`<a href="`), html.EscapeString(rewriteURL(string(linkURL), parsedURL))...)
 			link = append(link, []byte(`">`)...)
 			link = append(link, html.EscapeString(string(linkLabel))...)
