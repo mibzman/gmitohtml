@@ -1,4 +1,13 @@
-# gmitohtml
+# mibzman's gmitohtml
+A fork of [tslocum's gmitohtml](https://gitlab.com/tslocum/gmitohtml) that targets Titan.
+
+### Changes:
+- Removed search box
+- Removed bookmarks 
+- Modify pathing so paths render as `hostname/pagename` instead of `hostname/gemini/hostname/pagename`
+- Added [water css](https://watercss.kognise.dev/)
+
+# Original README
 [![GoDoc](https://gitlab.com/tslocum/godoc-static/-/raw/master/badge.svg)](https://docs.rocketnine.space/gitlab.com/tslocum/gmitohtml/pkg/gmitohtml)
 [![CI status](https://gitlab.com/tslocum/gmitohtml/badges/master/pipeline.svg)](https://gitlab.com/tslocum/gmitohtml/commits/master)
 [![Donate](https://img.shields.io/liberapay/receives/rocketnine.space.svg?logo=liberapay)](https://liberapay.com/rocketnine.space)
