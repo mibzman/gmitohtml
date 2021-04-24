@@ -10,7 +10,7 @@ import (
 	"os/exec"
 	"runtime"
 
-	"gitlab.com/tslocum/gmitohtml/pkg/gmitohtml"
+	"github.com/mibzman/gmitohtml/pkg/gmitohtml"
 )
 
 func openBrowser(url string) {
