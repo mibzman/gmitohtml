@@ -1,3 +1,5 @@
+gitlab.com/tslocum/gmitohtml v1.0.3 h1:mNEDRL5eNHAIPHI6eIi4QpwJCk97SF5efEvtZOL5j+A=
+gitlab.com/tslocum/gmitohtml v1.0.3/go.mod h1:UVZEaBMmAAdEPZOUyjV5ZxiQLOkvAbGE13GXKb/b4OI=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v3 v3.0.0-20210105161348-2e78108cf5f8 h1:tH9C0MON9YI3/KuD+u5+tQrQQ8px0MrcJ/avzeALw7o=
